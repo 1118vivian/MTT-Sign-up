@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MTT 壯年班學員線上報名系統</title>
+  <!-- 引入 Tailwind CSS 網路版 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: 'Microsoft JhengHei', sans-serif;
+      background-color: #f4f6F9;
+    }
+    /* 針對中高齡學員加強全域字體大小與對比 */
+    input[type="text"], input[type="tel"], input[type="email"], input[type="number"], input[type="date"], select, textarea {
+      font-size: 1.25rem !important; /* 20px */
+      color: #1A252C !important;
+    }
+    label {
+      font-size: 1.35rem !important; /* ~22px */
+      font-weight: 700;
+      color: #2C3E50;
+    }
+    .step-active {
+      background-color: #1A5276 !important;
+      color: white !important;
+    }
+    /* 加大核取方塊與單選鈕，方便長輩手指點擊 */
+    input[type="checkbox"], input[type="radio"] {
+      width: 1.6rem;
+      height: 1.6rem;
+      cursor: pointer;
+    }
+    .checkbox-label {
+      font-size: 1.25rem !important;
+      font-weight: 500;
+      color: #334155;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .required-star {
+      color: #DC2626;
+      margin-left: 0.25rem;
+    }
+  </style>
+</head>
+<body class="pb-12 text-slate-800">
+
+  <!-- 系統頂部橫幅 -->
+  <header class="bg-[#1A5276] text-white text-center py-6 px-4 shadow-md mb-6">
+    <h1 class="text-3xl md:text-4xl font-bold tracking-wider">MTT 壯年班學員線上報名系統</h1>
+    <p class="text-lg md:text-xl mt-2 text-blue-100">聖經教育訓練中心 — 網路報名端</p>
+  </header>
+
+  <main class="max-w-3xl mx-auto px-4">
+    
+    <!-- ========================================== -->
+    <!-- 區塊一：手機免密碼登入 / 註冊入口 -->
+    <!-- ========================================== -->
+    <section id="loginSection" class="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-slate-200">
+      <h2 class="text-2xl font-bold text-[#1A5276] text-center mb-6">學員登入 / 新生註冊</h2>
+      <div class="bg-blue-50 text-blue-900 p-4 rounded-xl mb-6 text-lg border-l-4 border-blue-500">
+        💡 <strong>安心提示：</strong> 本系統<strong>不需要密碼</strong>。請輸入您的手機號碼，初次填寫者將自動註冊；若之前有填過但未完成，系統會自動幫您載入舊資料繼續填寫。
+      </div>
+      
+      <div class="space-y-6">
+        <div>
+          <label for="loginPhone" class="block mb-2">1. 請輸入您的手機號碼 (登入ID)<span class="required-star">*</span></label>
+          <input type="tel" id="loginPhone" placeholder="例如：0912345678" class="w-full p-4 border-2 border-slate-300 rounded-xl focus:border-[#1A5276] focus:outline-none placeholder-slate-400 font-bold tracking-wider">
+        </div>
+        
+        <div id="newNameField" class="bg-slate-50 p-4 rounded-xl border border-dashed border-slate-300">
+          <label for="loginName" class="block mb-2">2. 如果您是「第一次」報名，請輸入中文姓名：</label>
+          <p class="text-sm text-slate-500 mb-2">（已婚姊妹請冠夫姓）</p>
+          <input type="text" id="loginName" placeholder="例如：林弟兄 或 陳姊妹" class="w-full p-4 border-2 border-slate-300 rounded-xl focus:border-[#1A5276] focus:outline-none">
+        </div>
+
+        <button onclick="doLogin()" id="loginBtn" class="w-full bg-[#2E86C1] hover:bg-[#1A5276] text-white font-bold text-2xl py-5 rounded-2xl shadow-lg transition duration-200 block text-center">
+          進入系統 / 繼續填寫表單
+        </button>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- 區塊二：主報名表單（登入成功後才會顯示） -->
+    <!-- ========================================== -->
+    <section id="formSection" class="hidden bg-white rounded-2xl shadow-xl p-4 md:p-8 border border-slate-200">
+      
+      <!-- 當前學員歡迎橫幅 -->
+      <div class="bg-slate-100 rounded-xl p-4 mb-6 flex flex-wrap justify-between items-center text-lg">
+        <div>參訓學員：<span id="displayStudentName" class="font-bold text-xl text-[#1A5276]"></span></div>
+        <div>綁定手機：<span id="displayStudentPhone" class="font-bold text-slate-700"></span></div>
+        <div>狀態：<span id="displayStatus" class="font-bold px-3 py-1 rounded-full bg-amber-100 text-amber-800">暫存中</span></div>
+      </div>
+
+      <!-- 4 步驟進度導覽列條 -->
+      <div class="flex justify-between items-center mb-8 bg-slate-50 p-2 rounded-xl border border-slate-200">
+        <div id="stepIndicator1" class="step-active flex-1 text-center py-3 rounded-lg font-bold text-lg border">1.基本聯絡</div>
+        <div id="stepIndicator2" class="flex-1 text-center py-3 rounded-lg font-bold text-lg text-slate-400">2.召會生活</div>
+        <div id="stepIndicator3" class="flex-1 text-center py-3 rounded-lg font-bold text-lg text-slate-400">3.健康資料</div>
+        <div id="stepIndicator4" class="flex-1 text-center py-3 rounded-lg font-bold text-lg text-slate-400">4.拍照上傳</div>
+      </div>
+
+      <!-- 表單本體 -->
+      <form id="mttForm" onsubmit="event.preventDefault();" class="space-y-6">
+        
+        <!-- STEP 1: 基本與聯絡資料 -->
+        <div id="stepPage1" class="space-y-6">
+          <h3 class="text-2xl font-bold text-[#1A5276] border-b-2 border-slate-200 pb-2 mb-4">第一步：基本與聯絡資料</h3>
+          
+          <div class="space-y-6">
+            <!-- 中文姓名 -->
+            <div>
+              <label class="block mb-1">中文姓名 (已婚姊妹請冠夫姓)<span class="required-star">*</span></label>
+              <input type="text" name="中文姓名" placeholder="例如：張林知足" class="w-full p-4 border-2 border-slate-300 rounded-xl" required>
+            </div>
+
+            <!-- 報名類別 -->
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+              <label class="block mb-3">報名類別<span class="required-star">*</span></label>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                <label class="checkbox-label p-3 bg-white border-2 rounded-xl justify-center">
+                  <input type="radio" name="報名類別" value="一般" checked> 一般
+                </label>
+                <label class="checkbox-label p-3 bg-white border-2 rounded-xl justify-center">
+                  <input type="radio" name="報名類別" value="體驗"> 體驗
+                </label>
+                <label class="checkbox-label p-3 bg-white border-2 rounded-xl justify-center">
+                  <input type="radio" name="報名類別" value="復訓"> 復訓
+                </label>
+                <label class="checkbox-label p-3 bg-white border-2 rounded-xl justify-center">
+                  <input type="radio" name="報名類別" value="其他"> 其他
+                </label>
+              </div>
+              <div class="text-md text-blue-800 space-y-1 bg-blue-50 p-3 rounded-lg border-l-4 border-blue-400">
+                <div>📌 <strong>填寫說明：</strong></div>
+                <div>1. 勾選【體驗】請同時在下方【其餘類別與體驗備註】填寫體驗日期（以週為單位，至少應參加完整二週之訓練生活）。<em>例：2026/9/3~9/13</em></div>
+                <div>2. 勾選【復訓】請在下方欄位填寫舊學號。<em>例：MTT0001</em></div>
+              </div>
+              <div class="mt-3">
+                <input type="text" name="報名類別備註" placeholder="填寫體驗日期、復訓學員學號或其他說明..." class="w-full p-4 border-2 border-slate-300 rounded-xl bg-white">
+              </div>
+            </div>
+
+            <!-- 護照英文姓名 -->
+            <div>
+              <label class="block mb-1">護照英文姓名<span class="required-star">*</span></label>
+              <p class="text-sm text-slate-500 mb-2">例：請一律大寫 LEE, CHIA-IN</p>
+              <input type="text" name="護照英文姓名" placeholder="LEE, CHIA-IN" class="w-full p-4 border-2 border-slate-300 rounded-xl uppercase" required>
+            </div>
+
+            <!-- 身分證字號 -->
+            <div>
+              <label class="block mb-1">身分證字號<span class="required-star">*</span></label>
+              <input type="text" name="身分證字號" placeholder="例如：A123456789" class="w-full p-4 border-2 border-slate-300 rounded-xl uppercase" required>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+            <div>
+              <label class="block mb-2">B/S (稱謂)</label>
+              <select name="B/S" id="studentGender" class="w-full p-4 border-2 border-slate-300 rounded-xl bg-white">
+                <option value="弟兄">弟兄 (Brother)</option>
+                <option value="姊妹">姊妹 (Sister)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block mb-2">出生日期</label>
+              <input type="date" name="出生日期" class="w-full p-4 border-2 border-slate-300 rounded-xl">
+            </div>
+            <div>
+              <label class="block mb-2">年齡</label>
+              <input type="number" name="年齡" placeholder="例如：55" class="w-full p-4 border-2 border-slate-300 rounded-xl">
+            </div>
+            <div>
+              <label class="block mb-2">最高學歷</label>
+              <input type="text" name="最高學歷" placeholder="例如：大學 / 高中" class="w-full p-4 border-2 border-slate-300 rounded-xl">
+            </div>
+            <div>
+              <label class="block mb-2">身高 (cm)</label>
+              <input type="text" name="身高" placeholder="例如：168" class="w-full p-4 border-2 border-slate-300 rounded-xl">
+            </div>
+            <div>
+              <label class="block mb-2">家中電話 (選填)</label>
+              <input type="tel" name="家中電話" placeholder="例如：04-25881234" class="w-full p-4 border-2 border-slate-300 rounded-xl">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block mb-2">電子郵件 E-mail</label>
+              <input type="email" name="E-mail" placeholder="username@gmail.com" class="w-full p-4 border-2 border-slate-300 rounded-xl">
+            </div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="md:col-span-1">
+              <label class="block mb-2">郵遞區號</label>
+              <input type="text" name="郵遞區號" placeholder="3碼或5碼" class="w-full p-4 border-2 border-slate-300 rounded-xl">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block mb-2">通信住址</label>
+              <input type="text" name="通信住址" placeholder="請填寫完整的收件地址" class="w-full p-4 border-2 border-slate-300 rounded-xl">
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2: 召會生活背景 -->
+        <div id="stepPage2" class="hidden space-y-6">
+          <h3 class="text-2xl font-bold text-[#1A5276] border-b-2 border-slate-200 pb-2 mb-4">第二步：召會生活背景</h3>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block mb-2">得救年日</label>
+              <input type="text" name="得救年日" placeholder="例如：1995年 或 2010/05/12" class="w-full p-4 border-2 border-slate-300 rounded-xl">
+            </div>
+            <div>
+              <label class="block mb-2">所屬召會</label>
+              <input type="text" name="所屬召會" placeholder="例如：台中市召會" class="w-full p-4 border-2 border-slate-300 rounded-xl">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block mb-2">召會大區(會所)</label>
+              <input type="text" name="召會大區(會所)" placeholder="例如：東勢照顧區 / 第21會所" class="w-full p-4 border-2 border-slate-300 rounded-xl">
+            </div>
+            <div>
+              <label class="block mb-2">本地推薦長老姓名</label>
+              <input type="text" name="簽名長老" placeholder="請輸入長老姓名" class="w-full p-4 border-2 border-slate-300 rounded-xl">
+            </div>
+            <div>
+              <label class="block mb-2">推薦長老聯絡電話</label>
+              <input type="tel" name="簽名長老電話" placeholder="長老的手機號碼" class="w-full p-4 border-2 border-slate-300 rounded-xl">
+            </div>
+            <div>
+              <label class="block mb-2">緊急連絡人姓名</label>
+              <input type="text" name="緊急連絡人姓名" placeholder="家人或親近聖徒姓名" class="w-full p-4 border-2 border-slate-300 rounded-xl">
+            </div>
+            <div>
+              <label class="block mb-2">緊急連絡人電話</label>
+              <input type="tel" name="緊急連絡人電話" placeholder="緊急聯絡人電話" class="w-full p-4 border-2 border-slate-300 rounded-xl">
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3: 健康資料：疾病史 -->
+        <div id="stepPage3" class="hidden space-y-6">
+          <h3 class="text-2xl font-bold text-[#1A5276] border-b-2 border-slate-200 pb-2 mb-4">第三步：健康資料：疾病史</h3>
+          <p class="text-slate-600 text-lg">請確實勾選及填寫您的身體狀況，以便中心給予最合適的關顧：</p>
+
+          <!-- 1. 身體殘障 -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="block mb-2 text-xl">1. 身體殘障<span class="required-star">*</span></label>
+            <div class="flex gap-6 mb-2">
+              <label class="checkbox-label"><input type="radio" name="身體殘障" value="否" checked> 否</label>
+              <label class="checkbox-label"><input type="radio" name="身體殘障" value="其他"> 有（請在下方填寫原因與部位）</label>
+            </div>
+            <input type="text" name="身體殘障_其他" placeholder="其他說明：" class="w-full p-3 mt-1 border border-slate-300 rounded-lg bg-white">
+          </div>
+
+          <!-- 2. 動過手術 -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="block mb-2 text-xl">2. 動過手術<span class="required-star">*</span></label>
+            <div class="flex gap-6 mb-2">
+              <label class="checkbox-label"><input type="radio" name="動過手術" value="否" checked> 否</label>
+              <label class="checkbox-label"><input type="radio" name="動過手術" value="其他"> 有（請在下方填寫病因、部位及復原程度）</label>
+            </div>
+            <input type="text" name="動過手術_其他" placeholder="其他說明：" class="w-full p-3 mt-1 border border-slate-300 rounded-lg bg-white">
+          </div>
+
+          <!-- 3. 法定傳染病 -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="block mb-2 text-xl">3. 法定傳染病<span class="required-star">*</span></label>
+            <div class="flex gap-6 mb-2">
+              <label class="checkbox-label"><input type="radio" name="法定傳染病" value="否" checked> 否</label>
+              <label class="checkbox-label"><input type="radio" name="法定傳染病" value="其他"> 有（請在下方說明哪種傳染病，如：肺結核、B肝等）</label>
+            </div>
+            <input type="text" name="法定傳傳染病_其他" placeholder="其他說明：" class="w-full p-3 mt-1 border border-slate-300 rounded-lg bg-white">
+          </div>
+
+          <!-- 4. B型肝炎預防注射 -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="block mb-2 text-xl">4. B型肝炎預防注射<span class="required-star">*</span></label>
+            <div class="flex flex-col gap-2 mb-2">
+              <label class="checkbox-label"><input type="radio" name="B型肝炎預防注射" value="曾接受B肝注射" checked> 曾接受B肝注射</label>
+              <label class="checkbox-label"><input type="radio" name="B型肝炎預防注射" value="其他"> 其他（請在下方說明原因，如：已有抗體、未感染、或本身為帶原者）</label>
+            </div>
+            <input type="text" name="B型肝炎預防注射_其他" placeholder="其他說明：" class="w-full p-3 mt-1 border border-slate-300 rounded-lg bg-white">
+          </div>
+
+          <!-- 5. 對任何藥物或食物過敏？ -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="block mb-2 text-xl">5. 對任何藥物或食物過敏？<span class="required-star">*</span></label>
+            <div class="flex gap-6 mb-2">
+              <label class="checkbox-label"><input type="radio" name="過敏史" value="否" checked> 否</label>
+              <label class="checkbox-label"><input type="radio" name="過敏史" value="其他"> 有（請在下方填寫說明）</label>
+            </div>
+            <input type="text" name="過敏史_其他" placeholder="其他說明：" class="w-full p-3 mt-1 border border-slate-300 rounded-lg bg-white">
+          </div>
+
+          <!-- 6. 個人疾病史 (可複選) -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="block mb-3 text-xl">6. 個人疾病史 <span class="text-sm text-slate-500 font-normal">(可複選)</span>*</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="無"> 無</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="高血壓"> 高血壓</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="腎病"> 腎病</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="高膽固醇"> 高膽固醇</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="心血管疾病"> 心血管疾病</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="氣喘"> 氣喘</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="糖尿病"> 糖尿病</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="肺病"> 肺病</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="B型肝炎"> B型肝炎</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="消化性潰瘍"> 消化性潰瘍</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="甲狀腺機能亢進"> 甲狀腺機能亢進</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="牙周病"> 牙周病</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="痛風"> 痛風</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="脊椎側彎"> 脊椎側彎</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="心律不整"> 心律不整</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="慢性鼻炎"> 慢性鼻炎</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="過敏性鼻炎"> 過敏性鼻炎</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="貧血"> 貧血</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="癲癇"> 癲癇</label>
+              <label class="checkbox-label"><input type="checkbox" name="疾病史" value="常腰酸背痛"> 常腰酸背痛</label>
+            </div>
+            <input type="text" name="疾病史_其他" placeholder="其他疾病史說明：" class="w-full p-3 mt-3 border border-slate-300 rounded-lg bg-white">
+          </div>
+
+          <!-- 7. 曾看過精神科門診嗎？ -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="block mb-2 text-xl">7. 曾看過精神科門診嗎？<span class="required-star">*</span></label>
+            <div class="flex gap-6 mb-2">
+              <label class="checkbox-label"><input type="radio" name="精神科門診" value="沒有" checked> 沒有</label>
+              <label class="checkbox-label"><input type="radio" name="精神科門診" value="其他"> 有（請在下方填寫醫院、科診、醫師診斷、用藥及現況）</label>
+            </div>
+            <input type="text" name="精神科門診_其他" placeholder="其他說明：" class="w-full p-3 mt-1 border border-slate-300 rounded-lg bg-white">
+          </div>
+
+          <!-- 8. 精神相關問題 (複選) -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="block mb-3 text-xl">8. 精神相關問題 <span class="text-sm text-slate-500 font-normal">(可複選)</span></label>
+            <div class="space-y-3">
+              <label class="checkbox-label items-start"><input type="checkbox" name="精神問題" value="過分恐懼現象" class="mt-1"> <span>會對某些對象（如蛇、狗、醫師）、某些行動（如上台演講）、某些特殊處境（如被關在電梯裏，坐飛機、黑暗…）發生過分恐懼現象。</span></label>
+              <label class="checkbox-label items-start"><input type="checkbox" name="精神問題" value="情緒亢進連續一週" class="mt-1"> <span>曾呈現極端高興，閒不下來，說話滔滔不絕，有時有誇大妄想，食慾增加、非常熱情等情緒，至少連續一週之久。</span></label>
+              <label class="checkbox-label items-start"><input type="checkbox" name="精神問題" value="反覆性恐慌狀態" class="mt-1"> <span>你會否在沒有生命危險的處境下反覆性發生恐慌狀態（三週內至少三次以上），如極端不安、焦慮、恐慌且附帶呼吸短促困難、心跳、出汗、發抖、頭暈、怕死或怕發瘋等現象？</span></label>
+              <label class="checkbox-label items-start"><input type="checkbox" name="精神問題" value="強迫性思想行為" class="mt-1"> <span>你有否強迫性思想衝動或行為重覆發生，無法控制，而影響平常生活。</span></label>
+              <label class="checkbox-label items-start"><input type="checkbox" name="精神問題" value="情緒低落連續兩週" class="mt-1"> <span>曾情緒低落、悲觀、消極，做任何事都提不起興趣來，行動遲緩，常常坐著發呆，變得沈默寡言，思考缺少活力，食慾減低，至少連續兩週之久。</span></label>
+            </div>
+            <input type="text" name="精神問題_其他" placeholder="其他補充說明：" class="w-full p-3 mt-3 border border-slate-300 rounded-lg bg-white">
+          </div>
+
+          <!-- 9. 睡眠狀況／體力如何 (複選) -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="block mb-3 text-xl">9. 睡眠狀況／體力如何 <span class="text-sm text-slate-500 font-normal">(可複選)</span></label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <label class="checkbox-label"><input type="checkbox" name="睡眠體力" value="在有空調的房間無法入睡"> 在有空調的房間無法入睡</label>
+              <label class="checkbox-label"><input type="checkbox" name="睡眠體力" value="需要很長時間的睡眠（大於10小時）"> 需要很長時間睡眠(>10小時)</label>
+              <label class="checkbox-label"><input type="checkbox" name="睡眠體力" value="入睡困難"> 入睡困難</label>
+              <label class="checkbox-label"><input type="checkbox" name="睡眠體力" value="我愈來愈容易疲倦"> 我愈來愈容易疲倦</label>
+              <label class="checkbox-label"><input type="checkbox" name="睡眠體力" value="易醒"> 易醒</label>
+              <label class="checkbox-label"><input type="checkbox" name="睡眠體力" value="不管我做任何事，都容易疲倦"> 不管做任何事都容易疲倦</label>
+              <label class="checkbox-label"><input type="checkbox" name="睡眠體力" value="早醒（無法再入睡）"> 早醒（無法再入睡）</label>
+              <label class="checkbox-label"><input type="checkbox" name="睡眠體力" value="我身體太虛弱以致無法做任何事"> 身體太虛弱無法做任何事</label>
+              <label class="checkbox-label"><input type="checkbox" name="睡眠體力" value="早上醒來總是疲累"> 早上醒來總是疲累</label>
+            </div>
+            <input type="text" name="睡眠體力_其他" placeholder="其他睡眠障礙說明：" class="w-full p-3 mt-3 border border-slate-300 rounded-lg bg-white">
+          </div>
+
+          <!-- 10. 各系統生理症狀大群組 -->
+          <div class="border-2 border-slate-200 p-4 rounded-2xl bg-white space-y-4">
+            <h4 class="text-xl font-bold text-slate-700 bg-slate-100 p-2 rounded-lg">10. 身體各器官系統現況自我點檢</h4>
+            
+            <!-- 10-1 皮膚 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-1. 皮膚</span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_皮膚" value="紅疹"> 紅疹</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_皮膚" value="腫塊"> 腫塊</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_皮膚" value="不明原因搔癢"> 不明原因搔癢</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_皮膚" value="顏色改變"> 顏色改變</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_皮膚" value="頭髮和指甲有無異常"> 頭髮指甲異常</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_皮膚" value="臉部潮紅或蒼白"> 臉部潮紅或蒼白</label>
+              </div>
+              <input type="text" name="生理_皮膚_其他" placeholder="皮膚其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-2 頭部 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-2. 頭部</span>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_頭部" value="頭痛"> 頭痛</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_頭部" value="暈眩"> 暈眩</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_頭部" value="頭部外傷"> 頭部外傷</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_頭部" value="頭部有壓迫感"> 頭部有壓迫感</label>
+              </div>
+              <input type="text" name="生理_頭部_其他" placeholder="頭部其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-3 頸部 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-3. 頸部</span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_頸部" value="僵硬"> 僵硬</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_頸部" value="異常腫大"> 異常腫大</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_頸部" value="甲狀腺腫大"> 甲狀腺腫大</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_頸部" value="疼痛"> 疼痛</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_頸部" value="移動、轉動困難"> 移動轉動困難</label>
+              </div>
+              <input type="text" name="生理_頸部_其他" placeholder="頸部其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-4 眼 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-4. 眼</span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_眼" value="眼瞼下垂"> 眼瞼下垂</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_眼" value="眼球凸出"> 眼球凸出</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_眼" value="燒灼感"> 燒灼感</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_眼" value="視力突然模糊"> 視力突然模糊</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_眼" value="複視"> 複視</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_眼" value="畏光"> 畏光</label>
+              </div>
+              <input type="text" name="生理_眼_其他" placeholder="眼睛其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-5 耳 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-5. 耳</span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_耳" value="滲出不明液體"> 滲出不明液體</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_耳" value="突然聽力減弱"> 聽力突然減弱</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_耳" value="感染"> 感染</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_耳" value="疼痛"> 疼痛</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_耳" value="耳鳴"> 耳鳴</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_耳" value="耳部有異常突起"> 耳部異常突起</label>
+              </div>
+              <input type="text" name="生理_耳_其他" placeholder="耳朵其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-6 鼻 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-6. 鼻</span>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_鼻" value="鼻竇炎"> 鼻竇炎</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_鼻" value="嗅覺喪失"> 嗅覺喪失</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_鼻" value="習慣性流鼻血"> 習慣性流鼻血</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_鼻" value="過敏性鼻炎"> 過敏性鼻炎</label>
+              </div>
+              <input type="text" name="生理_鼻_其他" placeholder="鼻子其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-7 口腔 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-7. 口腔</span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_口腔" value="牙齦出血"> 牙齦出血</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_口腔" value="舌頭有異常或傷口"> 舌頭異常/傷口</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_口腔" value="唇部有潰瘍、白斑"> 唇部潰瘍白斑</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_口腔" value="疼痛"> 疼痛</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_口腔" value="口乾"> 口乾(喝水無解)</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_口腔" value="味覺異常"> 味覺異常</label>
+              </div>
+              <input type="text" name="生理_口腔_其他" placeholder="口腔其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-8 喉嚨 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-8. 喉嚨</span>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_喉嚨" value="喉嚨痛"> 喉嚨痛</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_喉嚨" value="聲音嘶啞"> 聲音嘶啞</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_喉嚨" value="吞嚥困難"> 吞嚥困難</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_喉嚨" value="失聲"> 失聲(僅能耳語)</label>
+              </div>
+              <input type="text" name="生理_喉嚨_其他" placeholder="喉嚨其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-9 呼吸系統 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-9. 呼吸系統</span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_呼吸" value="呼吸困難"> 呼吸困難(窒息感)</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_呼吸" value="咳血"> 咳血</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_呼吸" value="氣喘"> 氣喘</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_呼吸" value="慢性支氣管炎"> 慢性支氣管炎</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_呼吸" value="肺炎"> 肺炎</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_呼吸" value="肺氣腫"> 肺氣腫</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_呼吸" value="肺結核"> 肺結核</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_呼吸" value="呼吸急促"> 呼吸急促</label>
+              </div>
+              <input type="text" name="生理_呼吸_其他" placeholder="呼吸其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-10 心肺系統 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-10. 心肺系統</span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_心肺" value="心悸"> 心悸</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_心肺" value="胸悶或胸痛"> 胸悶或胸痛</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_心肺" value="心跳加快"> 心跳加快</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_心肺" value="心跳減慢"> 心跳減慢</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_心肺" value="心律不整"> 心律不整</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_心肺" value="心雜音"> 心雜音</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_心肺" value="靜脈曲張"> 靜脈曲張</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_心肺" value="靜脈炎"> 靜脈炎</label>
+              </div>
+              <input type="text" name="生理_心肺_其他" placeholder="心肺其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-11 消化系統 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-11. 消化系統</span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="胃食道逆流"> 胃食道逆流</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="吞嚥困難"> 吞嚥困難</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="食道灼熱痛"> 食道灼熱痛</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="吐血"> 吐血</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="排便習慣改變"> 排便習慣改變</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="黑便"> 黑便</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="食慾不佳"> 食慾不佳</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="消化不良"> 消化不良</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="腹脹"> 腹脹</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="嘔吐"> 嘔吐</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="噁心"> 噁心</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="大便出血"> 大便出血</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="便祕"> 便祕(>3天未排)</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="肝炎"> 肝炎</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="黃膽"> 黃膽</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="飲食習慣改變"> 飲食習慣改變</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="腹瀉"> 腹瀉(經常)</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="胃痛"> 胃痛</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="胃潰瘍"> 胃潰瘍</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_消化" value="十二指腸潰瘍"> 十二指腸潰瘍</label>
+              </div>
+              <input type="text" name="生理_消化_其他" placeholder="消化其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-12 泌尿系統 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-12. 泌尿系統</span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_泌尿" value="解尿困難"> 解尿困難</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_泌尿" value="寡尿"> 寡尿(24h<400ml)</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_泌尿" value="泌尿器官絞痛"> 泌尿器官絞痛</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_泌尿" value="多尿"> 多尿</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_泌尿" value="夜尿"> 夜尿</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_泌尿" value="血尿"> 血尿</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_泌尿" value="尿失禁"> 尿失禁</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_泌尿" value="尿路結石"> 尿路結石</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_泌尿" value="尿道感染"> 尿道感染</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_泌尿" value="茶色尿"> 茶色尿</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_泌尿" value="頻尿"> 頻尿(間隔<1h)</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_泌尿" value="解尿時會痛"> 解尿時會痛</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_泌尿" value="蛋白尿"> 蛋白尿(多泡沫)</label>
+              </div>
+              <input type="text" name="生理_泌尿_其他" placeholder="泌尿其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-13 骨骼肌肉系統 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-13. 骨骼肌肉系統</span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_骨骼" value="虛弱"> 虛弱</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_骨骼" value="疼痛"> 疼痛</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_骨骼" value="僵硬"> 僵硬</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_骨骼" value="行動困難"> 行動困難</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_骨骼" value="扭傷"> 扭傷</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_骨骼" value="拉傷"> 拉傷</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_骨骼" value="腰酸背痛"> 腰酸背痛</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_骨骼" value="關節炎"> 關節炎</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_骨骼" value="痛風"> 痛風</label>
+              </div>
+              <input type="text" name="生理_骨骼_其他" placeholder="骨骼肌肉其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-14 神經系統 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-14. 神經系統</span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_神經" value="暈眩"> 暈眩</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_神經" value="四肢震顫"> 四肢震顫</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_神經" value="動作協調困難"> 動作協調困難</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_神經" value="手腳麻木或刺痛"> 手腳麻木/刺痛</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_神經" value="類似癲癇發作"> 類似癲癇發作</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_神經" value="神經痛"> 神經痛</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_神經" value="大小便控制不良"> 大小便控制不良</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_神經" value="肌肉萎縮"> 肌肉萎縮</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_神經" value="肌肉無力但無癱瘓"> 肌肉無力無癱瘓</label>
+              </div>
+              <input type="text" name="生理_神經_其他" placeholder="神經其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-15 內分泌系統 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-15. 內分泌系統</span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_內分泌" value="甲狀腺疾病"> 甲狀腺疾病</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_內分泌" value="糖尿病"> 糖尿病</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_內分泌" value="體重減輕"> 體重減輕(半年>10kg)</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_內分泌" value="體重增加"> 體重增加(半年>10kg)</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_內分泌" value="多尿"> 多尿</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_內分泌" value="冷熱失調"> 冷熱失調</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_內分泌" value="抽筋"> 抽筋</label>
+              </div>
+              <input type="text" name="生理_內分泌_其他" placeholder="內分泌其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-16 血液系統 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-16. 血液系統</span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_血液" value="貧血"> 貧血</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_血液" value="容易瘀血或凝血過長"> 易瘀血/凝血過長</label>
+                <label class="checkbox-label"><input type="checkbox" name="生理_血液" value="曾接受輸血"> 曾接受輸血</label>
+              </div>
+              <input type="text" name="生理_血液_其他" placeholder="血液其他..." class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-17 其他症狀 -->
+            <div class="p-2 border-b">
+              <span class="font-bold text-lg block mb-1">10-17. 其他症狀</span>
+              <div class="grid grid-cols-1 gap-2">
+                <label class="checkbox-label"><input type="checkbox" name="生理_其他症狀" value="昏倒（意識不清）"> 昏倒（意識不清）</label>
+              </div>
+              <input type="text" name="生理_其他症狀_其他" placeholder="如有其他身體不適症狀請在此說明：" class="w-full p-2 mt-2 border rounded-md text-base">
+            </div>
+
+            <!-- 10-18 婦科問題 (姊妹專用) -->
+            <div id="gynecologySection" class="p-3 bg-rose-50/50 border border-rose-200 rounded-xl hidden">
+              <span class="font-bold text-lg text-rose-900 block mb-1">10-18. 婦科問題 (姊妹填寫，弟兄免填)</span>
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <label class="checkbox-label text-rose-900"><input type="checkbox" name="生理_婦科" value="月經不規則"> 月經不規則</label>
+                <label class="checkbox-label text-rose-900"><input type="checkbox" name="生理_婦科" value="月經量過多"> 月經量過多</label>
+                <label class="checkbox-label text-rose-900"><input type="checkbox" name="生理_婦科" value="停經"> 停經(連二次以上)</label>
+                <label class="checkbox-label text-rose-900"><input type="checkbox" name="生理_婦科" value="非經期類似經血分泌"> 非經期異常分泌</label>
+                <label class="checkbox-label text-rose-900"><input type="checkbox" name="生理_婦科" value="經痛：可正常作息"> 經痛：可正常作息</label>
+                <label class="checkbox-label text-rose-900"><input type="checkbox" name="生理_婦科" value="經痛：需臥床休息"> 經痛：需臥床休息</label>
+                <label class="checkbox-label text-rose-900"><input type="checkbox" name="生理_婦科" value="經痛：需服用葯物"> 經痛：需服用葯物</label>
+              </div>
+              <input type="text" name="生理_婦科_其他" placeholder="婦科其他..." class="w-full p-2 mt-2 border border-rose-200 rounded-md text-base bg-white">
+            </div>
+          </div>
+
+          <!-- 11. 有否煙癮、酒癮，難以戒除？ -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="block mb-2 text-xl">11. 有否煙癮、酒癮，難以戒除？<span class="required-star">*</span></label>
+            <div class="flex gap-6 mb-2">
+              <label class="checkbox-label"><input type="radio" name="煙酒癮" value="否" checked> 否</label>
+              <label class="checkbox-label"><input type="radio" name="煙酒癮" value="其他"> 是（請在下方填註煙癮幾年？或酒癮幾年？）</label>
+            </div>
+            <input type="text" name="煙酒癮_其他" placeholder="其他說明：" class="w-full p-3 mt-1 border border-slate-300 rounded-lg bg-white">
+          </div>
+
+          <!-- 12.您是否曾吸食毒品？ -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="block mb-2 text-xl">12. 您是否曾吸食毒品？<span class="required-star">*</span></label>
+            <div class="flex gap-6 mb-2">
+              <label class="checkbox-label"><input type="radio" name="吸毒史" value="否" checked> 否</label>
+              <label class="checkbox-label"><input type="radio" name="吸毒史" value="其他"> 是（請在下方填註：1.目前已戒除 或 2.尚未完全戒除）</label>
+            </div>
+            <input type="text" name="吸毒史_其他" placeholder="其他說明：" class="w-full p-3 mt-1 border border-slate-300 rounded-lg bg-white">
+          </div>
+
+          <!-- 13. 有否同性戀的傾向？ -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="block mb-2 text-xl">13. 有否同性戀的傾向？<span class="required-star">*</span></label>
+            <div class="flex gap-12 mb-2">
+              <label class="checkbox-label"><input type="radio" name="同性戀傾向" value="否" checked> 否</label>
+              <label class="checkbox-label"><input type="radio" name="同性戀傾向" value="是"> 是</label>
+            </div>
+          </div>
+
+          <!-- 14.我為什麼參加壯年班訓練？ (複選，至多三項) -->
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+            <label class="block mb-3 text-xl">14. 我為什麼參加壯年班訓練？ <span class="text-sm text-slate-500 font-normal">(複選，至多三項)</span>*</label>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-2">
+              <label class="checkbox-label"><input type="checkbox" name="參訓動機" value="家人的鼓勵" onchange="limitCheckbox(this, '參訓動機', 3)"> 家人的鼓勵</label>
+              <label class="checkbox-label"><input type="checkbox" name="參訓動機" value="聖徒的鼓勵" onchange="limitCheckbox(this, '參訓動機', 3)"> 聖徒的鼓勵</label>
+              <label class="checkbox-label"><input type="checkbox" name="參訓動機" value="自己嚮往" onchange="limitCheckbox(this, '參訓動機', 3)"> 自己嚮往</label>
+              <label class="checkbox-label"><input type="checkbox" name="參訓動機" value="學員的榜樣" onchange="limitCheckbox(this, '參訓動機', 3)"> 學員的榜樣</label>
+              <label class="checkbox-label"><input type="checkbox" name="參訓動機" value="畢業聚會" onchange="limitCheckbox(this, '參訓動機', 3)"> 畢業聚會</label>
+              <label class="checkbox-label"><input type="checkbox" name="參訓動機" value="福音開展" onchange="limitCheckbox(this, '參訓動機', 3)"> 福音開展</label>
+              <label class="checkbox-label"><input type="checkbox" name="參訓動機" value="台島展覽" onchange="limitCheckbox(this, '參訓動機', 3)"> 台島展覽</label>
+            </div>
+            <input type="text" name="參訓動機_其他" placeholder="其他原因填寫：" class="w-full p-3 mt-1 border border-slate-300 rounded-lg bg-white">
+          </div>
+
+        </div>
+
+        <!-- STEP 4: 證明文件拍照上傳 -->
+        <div id="stepPage4" class="hidden space-y-6">
+          <h3 class="text-2xl font-bold text-[#1A5276] border-b-2 border-slate-200 pb-2 mb-4">第四步：上傳書面證明照片</h3>
+          <p class="text-amber-800 text-lg bg-amber-50 p-3 rounded-lg border-l-4 border-amber-500">
+            📸 <strong>操作說明：</strong> 點擊下方各區塊，可直接「啟動手機相機」拍照或選取照片。相片會即時呈現在畫面上，如果拍模糊了，點擊紅色的「刪除重拍」按鈕即可。
+          </p>
+
+          <!-- 檔案 1: 身分證正面 -->
+          <div class="border-2 border-dashed border-slate-300 rounded-2xl p-6 bg-slate-50 text-center">
+            <label class="block mb-4 text-xl">📁 身分證 【正面】 照片</label>
+            <input type="file" id="file_id_front" accept="image/*" capture="environment" class="hidden" onchange="previewAndUploadFile(this, '身分證正面圖檔', 'preview_front', 'box_front')">
+            
+            <div id="box_front" class="space-y-4">
+              <button type="button" onclick="document.getElementById('file_id_front').click()" class="bg-[#2E86C1] hover:bg-[#1A5276] text-white font-bold py-4 px-8 rounded-xl text-lg shadow">
+                📷 點擊此處拍照 / 上傳正面
+              </button>
+            </div>
+            <div id="preview_front" class="hidden mt-4 space-y-3">
+              <img src="" class="max-h-64 mx-auto rounded-lg shadow-md border">
+              <div class="text-sm text-green-700 font-bold">✓ 檔案已連結成功</div>
+              <button type="button" onclick="clearUploadedFile('file_id_front', '身分證正面圖檔', 'preview_front', 'box_front')" class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-6 rounded-lg text-md">
+                ✕ 照片不清晰，刪除重拍
+              </button>
+            </div>
+          </div>
+
+          <!-- 檔案 2: 身分證反面 -->
+          <div class="border-2 border-dashed border-slate-300 rounded-2xl p-6 bg-slate-50 text-center">
+            <label class="block mb-4 text-xl">📁 身分證 【反面】 照片</label>
+            <input type="file" id="file_id_back" accept="image/*" capture="environment" class="hidden" onchange="previewAndUploadFile(this, '身分證反面圖檔', 'preview_back', 'box_back')">
+            
+            <div id="box_back" class="space-y-4">
+              <button type="button" onclick="document.getElementById('file_id_back').click()" class="bg-[#2E86C1] hover:bg-[#1A5276] text-white font-bold py-4 px-8 rounded-xl text-lg shadow">
+                📷 點擊此處拍照 / 上傳反面
+              </button>
+            </div>
+            <div id="preview_back" class="hidden mt-4 space-y-3">
+              <img src="" class="max-h-64 mx-auto rounded-lg shadow-md border">
+              <div class="text-sm text-green-700 font-bold">✓ 檔案已連結成功</div>
+              <button type="button" onclick="clearUploadedFile('file_id_back', '身分證反面圖檔', 'preview_back', 'box_back')" class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-6 rounded-lg text-md">
+                ✕ 照片不清晰，刪除重拍
+              </button>
+            </div>
+          </div>
+
+          <!-- 檔案 3: 長老推薦函書面資料 -->
+          <div class="border-2 border-dashed border-slate-300 rounded-2xl p-6 bg-slate-50 text-center">
+            <label class="block mb-2 text-xl">📁 長老推薦書與書面簽名拍照</label>
+            <p class="text-slate-500 text-md mb-4">（包含長老推薦評語與親筆簽名之整頁書面報名表）</p>
+            <input type="file" id="file_recommend" accept="image/*" capture="environment" class="hidden" onchange="previewAndUploadFile(this, '長老推薦書簽名檔', 'preview_recommend', 'box_recommend')">
+            
+            <div id="box_recommend" class="space-y-4">
+              <button type="button" onclick="document.getElementById('file_recommend').click()" class="bg-[#2E86C1] hover:bg-[#1A5276] text-white font-bold py-4 px-8 rounded-xl text-lg shadow">
+                📷 點擊此處拍照 / 上傳推薦信
+              </button>
+            </div>
+            <div id="preview_recommend" class="hidden mt-4 space-y-3">
+              <img src="" class="max-h-64 mx-auto rounded-lg shadow-md border">
+              <div class="text-sm text-green-700 font-bold">✓ 檔案已連結成功</div>
+              <button type="button" onclick="clearUploadedFile('file_recommend', '長老推薦書簽名檔', 'preview_recommend', 'box_recommend')" class="bg-red-600 hover:bg-red-800 text-white font-bold py-2 px-6 rounded-lg text-md">
+                ✕ 照片不清晰，刪除重拍
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ========================================== -->
+        <!-- 控制按鈕區（最底部導覽控制） -->
+        <!-- ========================================== -->
+        <div class="pt-6 border-t border-slate-200 space-y-4">
+          <div class="flex justify-between gap-4">
+            <button type="button" id="prevBtn" onclick="changeStep(-1)" class="flex-1 bg-slate-500 hover:bg-slate-700 text-white font-bold py-4 rounded-xl text-xl transition invisible">
+              ⬅ 上一步驟
+            </button>
+            <button type="button" id="nextBtn" onclick="changeStep(1)" class="flex-1 bg-[#2E86C1] hover:bg-[#1A5276] text-white font-bold py-4 rounded-xl text-xl transition">
+              下一步驟 ➡
+            </button>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-dashed">
+            <button type="button" onclick="saveData(false)" class="bg-amber-500 hover:bg-amber-700 text-white font-bold py-4 px-4 rounded-xl text-xl shadow transition">
+              💾 暫存資料 (下次再繼續填寫)
+            </button>
+            <button type="button" onclick="saveData(true)" class="bg-emerald-600 hover:bg-emerald-800 text-white font-bold py-4 px-4 rounded-xl text-2xl shadow transition">
+              🚀 檢查並正式提交報名表
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </section>
+
+  </main>
+
+  <!-- 全域載入中遮罩 -->
+  <div id="loadingOverlay" class="hidden fixed inset-0 bg-slate-900/70 flex flex-col justify-center items-center text-white z-50">
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white mb-4"></div>
+    <div id="loadingText" class="text-2xl font-bold tracking-wider">正在連線雲端資料庫，請稍候...</div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 核心系統 JavaScript 邏輯控制 -->
+  <!-- ========================================== -->
+  <script>
+    // ⚠️ 請務必將下方引號內更換為您部署完後得到的 GAS 網頁應用程式 URL 網址
+    const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbx2NuNUrgvc-UOAeRJIjzpEqZxxNBsVjMLtCxKHg1o_q4DAyByuyHFmqKB305aHkZzQ7w/exec";
+
+    let currentStep = 1;
+    let globalStudentPhone = "";
+    let globalStudentName = "";
+
+    // 自動偵測性別下拉選單，控制婦科問題顯示/隱藏
+    document.getElementById("studentGender").addEventListener("change", function() {
+      const gyneDocs = document.getElementById("gynecologySection");
+      if (this.value === "姊妹") {
+        gyneDocs.classList.remove("hidden");
+      } else {
+        gyneDocs.classList.add("hidden");
+      }
+    });
+
+    // 限制複選框最大勾選數量 (適用於參訓動機等最多三項的限制)
+    function limitCheckbox(element, name, maxCount) {
+      const checkboxes = document.querySelectorAll(`input[name="${name}"]:checked`);
+      if (checkboxes.length > maxCount) {
+        alert(`此欄位最多只能選擇 ${maxCount} 項！`);
+        element.checked = false;
+      }
+    }
+
+    // 1. 處理登入與註冊
+    function doLogin() {
+      const phoneInput = document.getElementById("loginPhone").value.trim();
+      const nameInput = document.getElementById("loginName").value.trim();
+
+      if (!phoneInput || phoneInput.length < 9) {
+        alert("請輸入正確的手機號碼！");
+        return;
+      }
+
+      showLoading("正在驗證學員身分，讀取資料庫中...");
+
+      fetch(GAS_WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify({
+          action: "studentLogin",
+          payload: { phone: phoneInput, name: nameInput }
+        })
+      });
+
+      setTimeout(() => {
+        globalStudentPhone = phoneInput;
+        globalStudentName = nameInput || "聖徒";
+        
+        document.getElementById("loginSection").classList.add("hidden");
+        document.getElementById("formSection").classList.remove("hidden");
+        document.getElementById("displayStudentName").innerText = globalStudentName;
+        document.getElementById("displayStudentPhone").innerText = globalStudentPhone;
+        
+        // 如果一開始預設為姊妹，顯示婦科
+        if (document.getElementById("studentGender").value === "姊妹") {
+          document.getElementById("gynecologySection").classList.remove("hidden");
+        }
+
+        hideLoading();
+        window.scrollTo(0, 0);
+      }, 2000);
+    }
+
+    // 2. 分頁切換控制邏輯
+    function changeStep(direction) {
+      if (currentStep + direction < 1 || currentStep + direction > 4) return;
+
+      document.getElementById(`stepPage${currentStep}`).classList.add("hidden");
+      document.getElementById(`stepIndicator${currentStep}`).classList.remove("step-active", "text-white");
+      document.getElementById(`stepIndicator${currentStep}`).classList.add("text-slate-400");
+
+      currentStep += direction;
+
+      document.getElementById(`stepPage${currentStep}`).classList.remove("hidden");
+      document.getElementById(`stepIndicator${currentStep}`).classList.add("step-active", "text-white");
+      document.getElementById(`stepIndicator${currentStep}`).classList.remove("text-slate-400");
+
+      if (currentStep === 1) {
+        document.getElementById("prevBtn").classList.add("invisible");
+      } else {
+        document.getElementById("prevBtn").classList.remove("invisible");
+      }
+
+      if (currentStep === 4) {
+        document.getElementById("nextBtn").classList.add("invisible");
+      } else {
+        document.getElementById("nextBtn").classList.remove("invisible");
+        document.getElementById("nextBtn").className = "flex-1 bg-[#2E86C1] hover:bg-[#1A5276] text-white font-bold py-4 rounded-xl text-xl transition";
+      }
+      
+      window.scrollTo(0, 0);
+    }
+
+    // 3. 圖片拍照與非同步背景壓縮上傳
+    function previewAndUploadFile(inputElement, fieldName, previewContainerId, uploadBoxId) {
+      const file = inputElement.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const container = document.getElementById(previewContainerId);
+        container.querySelector("img").src = e.target.result;
+        container.classList.remove("hidden"); 
+        document.getElementById(uploadBoxId).classList.add("hidden"); 
+      };
+      reader.readAsDataURL(file);
+
+      showLoading(`正在傳送【${fieldName}】高畫質相片至訓練中心雲端，請勿關閉視窗...`);
+      
+      const uploadReader = new FileReader();
+      uploadReader.onload = function(e) {
+        const base64String = e.target.result;
+        
+        fetch(GAS_WEB_APP_URL, {
+          method: "POST",
+          mode: "no-cors",
+          body: JSON.stringify({
+            action: "uploadFile",
+            payload: {
+              phone: globalStudentPhone,
+              fieldName: fieldName,
+              base64Data: base64String,
+              mimeType: file.type
+            }
+          })
+        });
+
+        setTimeout(() => {
+          hideLoading();
+        }, 3000);
+      };
+      uploadReader.readAsDataURL(file);
+    }
+
+    // 4. 一鍵紅色按鈕：刪除重拍功能
+    function clearUploadedFile(inputId, fieldName, previewContainerId, uploadBoxId) {
+      if (confirm(`確定要刪除這張【${fieldName}】的照片並重新拍照嗎？`)) {
+        document.getElementById(inputId).value = ""; 
+        document.getElementById(previewContainerId).classList.add("hidden"); 
+        document.getElementById(uploadBoxId).classList.remove("hidden"); 
+      }
+    }
+
+    // 5. 儲存與正式提交資料
+    function saveData(isSubmit) {
+      if (isSubmit) {
+        const check = confirm("確定所有資料（包含相片與疾病史）皆清晰完整，並正式提交給服事者審核嗎？提交後將無法自行修改。");
+        if (!check) return;
+      }
+
+      showLoading(isSubmit ? "正在進行最終提交鎖定中..." : "正在同步暫存您的填寫進度...");
+
+      const formElement = document.getElementById("mttForm");
+      const formDataObj = {};
+      
+      // A. 先打包所有的標準單選、下拉與文字欄位
+      const standardInputs = formElement.querySelectorAll("input[type='text'], input[type='tel'], input[type='email'], input[type='number'], input[type='date'], select, textarea");
+      standardInputs.forEach(input => {
+        if (input.name) {
+          formDataObj[input.name] = input.value;
+        }
+      });
+
+      // B. 打包報名類別單選鈕
+      const categoryRadio = formElement.querySelector("input[name='報名類別']:checked");
+      if (categoryRadio) formDataObj["報名類別"] = categoryRadio.value;
+
+      // C. 打包步驟三的所有單選/二選一收納欄
+      const radioGroups = ["身體殘障", "動過手術", "法定傳染病", "B型肝炎預防注射", "過敏史", "精神科門診", "煙酒癮", "吸毒史", "同性戀傾向"];
+      radioGroups.forEach(groupName => {
+        const selectedRadio = formElement.querySelector(`input[name="${groupName}"]:checked`);
+        if (selectedRadio) {
+          formDataObj[groupName] = selectedRadio.value;
+        }
+      });
+
+      // D. 處理多選複選框群組 (將打勾的選項用半形逗號結合，方便寫入 Excel 同一格)
+      const checkboxGroups = ["疾病史", "精神問題", "睡眠體力", "生理_皮膚", "生理_頭部", "生理_頸部", "生理_眼", "生理_耳", "生理_鼻", "生理_口腔", "生理_喉嚨", "生理_呼吸", "生理_心肺", "生理_消化", "生理_泌尿", "生理_骨骼", "生理_神經", "生理_內分泌", "生理_血液", "生理_其他症狀", "生理_婦科", "參訓動機"];
+      
+      checkboxGroups.forEach(groupName => {
+        const checkedList = [];
+        const checkedBoxes = formElement.querySelectorAll(`input[name="${groupName}"]:checked`);
+        checkedBoxes.forEach(box => {
+          checkedList.push(box.value);
+        });
+        formDataObj[groupName] = checkedList.join(", "); // 例如: "高血壓, 腎病, 氣喘"
+      });
+
+      // 發送寫入請求給後端 GAS
+      fetch(GAS_WEB_APP_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: JSON.stringify({
+          action: "saveRegistration",
+          payload: {
+            phone: globalStudentPhone,
+            formData: formDataObj,
+            isSubmit: isSubmit
+          }
+        })
+      });
+
+      setTimeout(() => {
+        hideLoading();
+        if (isSubmit) {
+          alert("🎉 您的完整報名與身體疾病史資料已正式提交成功！感謝您的配合。");
+          document.getElementById("displayStatus").innerText = "已提交";
+          document.getElementById("displayStatus").className = "font-bold px-3 py-1 rounded-full bg-green-100 text-green-800";
+          
+          // 鎖定表單所有元件
+          formElement.querySelectorAll("input, select, textarea, button").forEach(el => el.disabled = true);
+        } else {
+          alert("💾 疾病史與基本資料已暫存成功！下次您可以使用同一個手機號碼登入繼續填寫。");
+        }
+      }, 2500);
+    }
+
+    function showLoading(text) {
+      document.getElementById("loadingText").innerText = text;
+      document.getElementById("loadingOverlay").classList.remove("hidden");
+    }
+    function hideLoading() {
+      document.getElementById("loadingOverlay").classList.add("hidden");
+    }
+  </script>
+</body>
+</html>
